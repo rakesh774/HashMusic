@@ -44,6 +44,7 @@ fun HashMusicApp() {
     val screens = listOf(Screen.Home, Screen.Search, Screen.Library)
     val currentSong by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
+    val likedSongs by viewModel.likedSongs.collectAsState(initial = emptyList())
     
     Scaffold(
         bottomBar = {
@@ -91,7 +92,27 @@ fun HashMusicApp() {
         ) {
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Search.route) { SearchScreen(viewModel = viewModel) }
-            composable(Screen.Library.route) { LibraryScreen() }
+            composable(Screen.Library.route) { 
+                LibraryScreen(
+                    likedSongs = likedSongs,
+                    onSongClick = { entity ->
+                        // Convert entity to model for playing
+                        val song = com.hashmusic.app.model.Song(
+                            id = entity.id,
+                            title = entity.title,
+                            artist = entity.artist,
+                            albumArt = entity.albumArt,
+                            duration = entity.duration,
+                            videoId = entity.videoId,
+                            album = entity.album,
+                            isLiked = entity.isLiked,
+                            isDownloaded = entity.isDownloaded,
+                            localPath = entity.localPath
+                        )
+                        viewModel.playSong(song)
+                    }
+                ) 
+            }
         }
     }
 }
