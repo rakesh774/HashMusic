@@ -2,15 +2,19 @@ package com.hashmusic.app.data.repository
 
 import com.hashmusic.app.data.local.AppDatabase
 import com.hashmusic.app.data.local.SongEntity
-import com.hashmusic.app.data.remote.YouTubeApiService
+import com.hashmusic.app.data.remote.HashMusicApiService
 import com.hashmusic.app.model.Song
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class MusicRepository(
-    private val api: YouTubeApiService,
+    private val api: HashMusicApiService,
     private val db: AppDatabase
 ) {
+    fun setSession(sessionId: String) {
+        api.setSession(sessionId)
+    }
+    
     suspend fun searchSongs(query: String): List<Song> = api.searchSongs(query)
     
     suspend fun getStreamUrl(videoId: String): String? = api.getStreamUrl(videoId)
@@ -18,6 +22,8 @@ class MusicRepository(
     fun getLikedSongs() = db.songDao().getLikedSongs()
     
     fun getDownloadedSongs() = db.songDao().getDownloadedSongs()
+    
+    suspend fun getRemoteLikedSongs(): List<Song> = api.getLikedSongs()
     
     suspend fun toggleLike(song: Song, isLiked: Boolean) {
         withContext(Dispatchers.IO) {

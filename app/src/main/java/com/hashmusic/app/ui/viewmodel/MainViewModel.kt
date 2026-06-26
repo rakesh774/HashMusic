@@ -85,6 +85,19 @@ class MainViewModel(
             repository.toggleLike(song, !isLiked)
         }
     }
+
+    fun loadLikedSongsFromRemote() {
+        viewModelScope.launch {
+            try {
+                val remoteSongs = repository.getRemoteLikedSongs()
+                remoteSongs.forEach { song ->
+                    repository.toggleLike(song, true)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }
 
 class MainViewModelFactory(

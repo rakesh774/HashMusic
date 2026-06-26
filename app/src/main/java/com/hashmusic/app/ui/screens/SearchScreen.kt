@@ -27,6 +27,9 @@ import com.hashmusic.app.ui.viewmodel.MainViewModelFactory
 fun SearchScreen(
     viewModel: MainViewModel
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loadLikedSongsFromRemote()
+    }
     
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()

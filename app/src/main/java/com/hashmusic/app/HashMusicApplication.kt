@@ -3,7 +3,7 @@ package com.hashmusic.app
 import android.app.Application
 import androidx.room.Room
 import com.hashmusic.app.data.local.AppDatabase
-import com.hashmusic.app.data.remote.YouTubeApiService
+import com.hashmusic.app.data.remote.HashMusicApiService
 import com.hashmusic.app.data.repository.MusicRepository
 
 class HashMusicApplication : Application() {
@@ -15,7 +15,7 @@ class HashMusicApplication : Application() {
     
     override fun onCreate() {
         super.onCreate()
-        val api = YouTubeApiService()
+        val api = HashMusicApiService()
         database = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
