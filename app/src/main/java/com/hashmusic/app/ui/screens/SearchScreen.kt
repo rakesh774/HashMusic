@@ -24,12 +24,9 @@ import com.hashmusic.app.ui.viewmodel.MainViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen() {
-    val context = LocalContext.current
-    val app = context.applicationContext as HashMusicApplication
-    val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(app, app.repository)
-    )
+fun SearchScreen(
+    viewModel: MainViewModel
+) {
     
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
