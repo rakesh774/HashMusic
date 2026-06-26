@@ -90,7 +90,7 @@ fun HashMusicApp() {
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(Screen.Home.route) { HomeScreen() }
-            composable(Screen.Search.route) { SearchScreen(viewModel) }
+            composable(Screen.Search.route) { SearchScreen(viewModel = viewModel) }
             composable(Screen.Library.route) { LibraryScreen() }
         }
     }
