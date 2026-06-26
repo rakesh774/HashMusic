@@ -128,4 +128,53 @@ class YouTubeApiService {
             else -> 0
         }
     }
+
+    suspend fun getStreamUrl(videoId: String): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val body = mapOf(
+                    "context" to context,
+                    "videoId" to videoId,
+                    "contentCheckOk" to true,
+                    "racyCheckOk" to true
+                )
+                val requestBody = gson.toJson(body).toRequestBody("application/json".toMediaType())
+                val request = Request.Builder()
+                    .url("$BASE_URL/player?key=$API_KEY")
+                    .post(requestBody)
+                    .build()
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string() ?: return@withContext null
+                parseStreamUrl(responseBody)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
+
+    private fun parseStreamUrl(jsonString: String): String? {
+        try {
+            val root = JsonParser.parseString(jsonString).asJsonObject
+            val formats = root.getAsJsonObject("streamingData")
+                ?.getAsJsonArray("adaptiveFormats") ?: return null
+            var bestUrl: String? = null
+            var highestBitrate = 0
+            for (format in formats) {
+                val obj = format.asJsonObject
+                val mimeType = obj.get("mimeType")?.asString ?: ""
+                if (mimeType.startsWith("audio/")) {
+                    val bitrate = obj.get("bitrate")?.asInt ?: 0
+                    if (bitrate > highestBitrate) {
+                        highestBitrate = bitrate
+                        bestUrl = obj.get("url")?.asString
+                    }
+                }
+            }
+            return bestUrl
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
 }
