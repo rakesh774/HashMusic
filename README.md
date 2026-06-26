@@ -1,59 +1,97 @@
 # 🎵 HashMusic
 
-> ⚠️ **Project Status:** Under Construction
+> **⚠️ Project Status: Under Construction**
 
-HashMusic is a modern Android music player currently under active development. The goal is to build a fast, lightweight, and beautiful offline music experience with a clean user interface and useful features for everyday listening.
+HashMusic is a modern Android music player that lets you stream music using publicly available YouTube Music sources, providing a clean, fast, and ad-free listening experience.
 
-## 🚧 Current Status
-
-This project is still in its early development stage. Many features are being implemented, refined, and tested.
-
-Please expect:
-- Incomplete functionality
-- UI/UX changes
-- Bugs and unexpected behavior
-- Frequent commits and updates
-
-## ✨ Planned Features
-
-- 🎶 Local music playback
-- 📂 Automatic music library scanning
-- ❤️ Favorites and playlists
-- 🔍 Fast search
-- 🎨 Modern Material Design interface
-- 🌙 Light & Dark themes
-- 🎧 Background playback
-- 📀 Album, Artist & Folder browsing
-- 🔊 Equalizer support
-- 📱 Smooth and responsive experience
-
-> Feature list is subject to change as development progresses.
-
-## 🛠️ Tech Stack
-
-- Kotlin
-- Android Studio
-- Material Design 3
-- Jetpack Libraries
-
-## 🤝 Contributions
-
-The project is currently under active development, so contributions are not being accepted at this time.
-
-Once the project reaches a more stable state, contribution guidelines will be added.
-
-## ⭐ Support
-
-If you're interested in following the project's progress, consider starring the repository. It helps motivate development and lets you know when new updates are released.
-
-## 📌 Disclaimer
-
-HashMusic is a personal learning and development project. It is **not yet ready for production use**.
+The project is currently under active development, and many features are still being implemented and refined.
 
 ---
 
-### 🚀 Stay Tuned
+## 🚧 Development Status
 
-More features, improvements, and documentation will be added as development continues.
+HashMusic is **not ready for production use**.
+
+Current development includes:
+
+* Core playback improvements
+* User interface redesign
+* Performance optimization
+* Feature implementation
+* Bug fixing and testing
+
+Expect frequent changes, incomplete features, and occasional breaking updates.
+
+---
+
+## ✨ Vision
+
+HashMusic aims to provide a modern music experience that is:
+
+* 🎵 Free to use
+* 🚫 Ad-free
+* ⚡ Fast and lightweight
+* 🎨 Clean and beautiful UI
+* 🔓 Open source
+
+---
+
+## 📋 Planned Features
+
+* 🎶 Stream music from YouTube Music
+* 🔍 Powerful search
+* ❤️ Favorites
+* 📂 Playlists
+* 🎧 Background playback
+* 🎨 Material 3 design
+* 🌙 Light & Dark themes
+* 📱 Responsive UI
+* 💾 Smart caching
+* 📈 Listening history
+* 🎼 Lyrics support
+* 📻 Artist and album browsing
+* 🔄 Queue management
+
+More features will be added as development progresses.
+
+---
+
+## 🛠️ Tech Stack
+
+* Kotlin
+* Jetpack Compose
+* Material Design 3
+* Android Jetpack
+* Media3 (ExoPlayer)
+
+---
+
+## 🤝 Contributing
+
+The project is still in its early stages, so contributions are temporarily closed while the architecture stabilizes.
+
+Contribution guidelines will be added once the project reaches a more mature state.
+
+---
+
+## ⭐ Support
+
+If you like the idea behind HashMusic, consider giving the repository a ⭐ to support its development and stay updated with future releases.
+
+---
+
+## ⚠️ Disclaimer
+
+HashMusic is an independent, open-source project and is **not affiliated with, endorsed by, or sponsored by YouTube or Google**.
+
+This application is currently under active development and should be considered experimental.
+
+---
+
+# 🚀 Stay Tuned
+
+HashMusic is just getting started.
+
+More features, improvements, and documentation are coming soon.
 
 **Thanks for checking out HashMusic! 🎵**
