@@ -1,8 +1,11 @@
 package com.hashmusic.app.ui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.hashmusic.app.HashMusicApplication
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(
+    application: Application,
     private val repository: MusicRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
     
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -61,6 +65,14 @@ class MainViewModel(
     fun playSong(song: Song) {
         _currentSong.value = song
         _isPlaying.value = true
+        viewModelScope.launch {
+            val streamUrl = repository.getStreamUrl(song.videoId)
+            if (streamUrl != null) {
+                val app = getApplication<HashMusicApplication>()
+                // Stream URL is ready - now we can play
+                // In a real app, bind to MusicService here
+            }
+        }
     }
     
     fun togglePlayPause() {
@@ -76,12 +88,13 @@ class MainViewModel(
 }
 
 class MainViewModelFactory(
+    private val application: Application,
     private val repository: MusicRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(repository) as T
+            return MainViewModel(application, repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

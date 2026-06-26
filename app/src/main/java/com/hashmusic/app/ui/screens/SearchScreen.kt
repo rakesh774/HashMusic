@@ -28,7 +28,7 @@ fun SearchScreen() {
     val context = LocalContext.current
     val app = context.applicationContext as HashMusicApplication
     val viewModel: MainViewModel = viewModel(
-        factory = MainViewModelFactory(app.repository)
+        factory = MainViewModelFactory(app, app.repository)
     )
     
     val searchQuery by viewModel.searchQuery.collectAsState()
