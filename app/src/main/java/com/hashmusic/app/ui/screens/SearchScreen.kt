@@ -1,5 +1,6 @@
 package com.hashmusic.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,10 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.hashmusic.app.HashMusicApplication
+import com.hashmusic.app.model.Song
 import com.hashmusic.app.ui.viewmodel.MainViewModel
 import com.hashmusic.app.ui.viewmodel.MainViewModelFactory
 
@@ -59,11 +64,9 @@ fun SearchScreen() {
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 items(searchResults) { song ->
-                    // Simple text display for now
-                    Text(
-                        text = "${song.title} - ${song.artist}",
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge
+                    SongListItem(
+                        song = song,
+                        onClick = { viewModel.playSong(song) }
                     )
                 }
                 if (searchResults.isEmpty() && searchQuery.isNotEmpty()) {
@@ -78,4 +81,49 @@ fun SearchScreen() {
             }
         }
     }
+}
+
+@Composable
+fun SongListItem(song: Song, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = song.albumArt,
+            contentDescription = "Album Art",
+            modifier = Modifier.size(56.dp),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = song.title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Text(
+            text = formatDuration(song.duration),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+fun formatDuration(durationSeconds: Long): String {
+    val minutes = durationSeconds / 60
+    val seconds = durationSeconds % 60
+    return "%d:%02d".format(minutes, seconds)
 }
