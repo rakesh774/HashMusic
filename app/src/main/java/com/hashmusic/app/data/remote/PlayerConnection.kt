@@ -48,7 +48,13 @@ object PlayerConnection {
     }
     
     fun playSong(url: String, title: String, artist: String, albumArt: String) {
-        val c = controller ?: return
+        android.util.Log.d("HashMusic", "PlayerConnection.playSong called")
+        val c = controller
+        if (c == null) {
+            android.util.Log.e("HashMusic", "Controller is NULL - cannot play!")
+            return
+        }
+        android.util.Log.d("HashMusic", "Controller exists, setting media item")
         
         val mediaItem = MediaItem.Builder()
             .setUri(url)
@@ -65,6 +71,7 @@ object PlayerConnection {
         c.setMediaItem(mediaItem)
         c.prepare()
         c.play()
+        android.util.Log.d("HashMusic", "Media item set, playing. isPlaying=${c.isPlaying}")
     }
     
     fun togglePlayPause() {
