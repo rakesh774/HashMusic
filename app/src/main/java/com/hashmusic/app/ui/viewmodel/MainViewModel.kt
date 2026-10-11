@@ -103,24 +103,32 @@ class MainViewModel(
     }
     
     fun playSong(song: Song) {
+        android.util.Log.d("HashMusic", "playSong called: ${song.title} by ${song.artist}")
         _currentSong.value = song
         _isPlaying.value = true
         
         viewModelScope.launch {
             try {
+                android.util.Log.d("HashMusic", "Fetching stream URL for videoId: ${song.videoId}")
                 val streamUrl = repository.getStreamUrl(song.videoId)
+                android.util.Log.d("HashMusic", "Stream URL result: $streamUrl")
+                
                 if (streamUrl != null) {
+                    android.util.Log.d("HashMusic", "PlayerConnection.isConnected = ${PlayerConnection.isConnected}")
+                    android.util.Log.d("HashMusic", "Calling PlayerConnection.playSong")
                     PlayerConnection.playSong(
                         url = streamUrl,
                         title = song.title,
                         artist = song.artist,
                         albumArt = song.albumArt
                     )
+                    android.util.Log.d("HashMusic", "playSong call completed")
                 } else {
+                    android.util.Log.e("HashMusic", "Stream URL was null - cannot play")
                     _isPlaying.value = false
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("HashMusic", "Error in playSong: ${e.message}", e)
                 _isPlaying.value = false
             }
         }
