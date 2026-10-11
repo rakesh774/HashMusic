@@ -25,8 +25,18 @@ class YouTubeMusicClient {
     private val gson = Gson()
     
     private val API_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
-    private val BASE_URL = "https://music.youtube.com/youtubei/v1"
+    private val BASE_URL = "https://www.youtube.com/youtubei/v1"
     
+    // Use TVHTML5_SIMPLY_EMBEDDED_PLAYER to avoid PO Token requirements for playback
+    private val context = mapOf(
+        "client" to mapOf(
+            "clientName" to "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
+            "clientVersion" to "2.0",
+            "hl" to "en",
+            "gl" to "US"
+        )
+    )
+
     private val webContextMap = mapOf(
         "client" to mapOf(
             "clientName" to "WEB_REMIX",
@@ -35,41 +45,7 @@ class YouTubeMusicClient {
             "gl" to "US"
         )
     )
-
-    private val androidVrContextMap = mapOf(
-        "client" to mapOf(
-            "clientName" to "ANDROID_VR",
-            "clientVersion" to "1.58.1",
-            "deviceMake" to "Oculus",
-            "deviceModel" to "Quest 3",
-            "osName" to "Android",
-            "osVersion" to "12",
-            "hl" to "en",
-            "gl" to "US"
-        )
-    )
-
-    private val webEmbeddedContextMap = mapOf(
-        "client" to mapOf(
-            "clientName" to "WEB_EMBEDDED_PLAYER",
-            "clientVersion" to "1.20240801.01.00",
-            "hl" to "en",
-            "gl" to "US"
-        )
-    )
-
-    private val iosContextMap = mapOf(
-        "client" to mapOf(
-            "clientName" to "IOS",
-            "clientVersion" to "19.29.1",
-            "deviceModel" to "iPhone14,3",
-            "osName" to "iPhone",
-            "osVersion" to "17.5.1",
-            "hl" to "en",
-            "gl" to "US"
-        )
-    )
-
+    
     private var cookies: String = ""
     
     fun setCookies(cookieString: String) {
@@ -93,22 +69,19 @@ class YouTubeMusicClient {
                 val requestBody = gson.toJson(body)
                     .toRequestBody("application/json".toMediaType())
                 
-                val requestBuilder = Request.Builder()
+                val request = Request.Builder()
                     .url("$BASE_URL/search?key=$API_KEY")
                     .post(requestBody)
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Cookie", cookies)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .build()
                 
-                if (cookies.isNotEmpty()) {
-                    requestBuilder.header("Cookie", cookies)
-                }
-                
-                val request = requestBuilder.build()
                 val response = client.newCall(request).execute()
                 val responseBody = response.body?.string() ?: return@withContext emptyList()
                 
                 parseSearchResponse(responseBody)
             } catch (e: Exception) {
-                Log.e("YouTubeMusicClient", "Search error", e)
+                e.printStackTrace()
                 emptyList()
             }
         }
@@ -249,80 +222,61 @@ class YouTubeMusicClient {
         }
         return songs
     }
-    
+
     suspend fun getStreamUrl(videoId: String): String? {
         return withContext(Dispatchers.IO) {
-            // First try ANDROID_VR context
-            var url = fetchStreamUrlWithContext(videoId, androidVrContextMap, "Mozilla/5.0 (Linux; Android 12; Quest 3) AppleWebKit/537.36")
-            if (!url.isNullOrEmpty()) return@withContext url
-
-            // Fallback to WEB_EMBEDDED_PLAYER
-            url = fetchStreamUrlWithContext(videoId, webEmbeddedContextMap, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-            if (!url.isNullOrEmpty()) return@withContext url
-
-            // Fallback to IOS context
-            url = fetchStreamUrlWithContext(videoId, iosContextMap, "com.google.ios.youtube/19.29.1 (iPhone14,3; iOS 17.5.1; Scale/3.00)")
-            return@withContext url
-        }
-    }
-
-    private fun fetchStreamUrlWithContext(videoId: String, context: Map<String, Any>, userAgent: String): String? {
-        try {
-            val body = mapOf(
-                "context" to context,
-                "videoId" to videoId,
-                "contentCheckOk" to true,
-                "racyCheckOk" to true
-            )
-            
-            val requestBody = gson.toJson(body)
-                .toRequestBody("application/json".toMediaType())
-            
-            val requestBuilder = Request.Builder()
-                .url("$BASE_URL/player?key=$API_KEY")
-                .post(requestBody)
-                .header("User-Agent", userAgent)
-            
-            if (cookies.isNotEmpty()) {
-                requestBuilder.header("Cookie", cookies)
+            try {
+                val body = mapOf(
+                    "context" to context,
+                    "videoId" to videoId,
+                    "contentCheckOk" to true,
+                    "racyCheckOk" to true
+                )
+                
+                val requestBody = gson.toJson(body)
+                    .toRequestBody("application/json".toMediaType())
+                
+                val request = Request.Builder()
+                    .url("$BASE_URL/player?key=$API_KEY")
+                    .post(requestBody)
+                    .header("Cookie", cookies)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string() ?: return@withContext null
+                
+                parseStreamUrl(responseBody)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
-
-            val request = requestBuilder.build()
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string() ?: return null
-            
-            val url = parseStreamUrl(responseBody)
-            if (!url.isNullOrEmpty()) {
-                Log.d("YouTubeMusicClient", "Found stream URL using $userAgent")
-                return url
-            }
-        } catch (e: Exception) {
-            Log.e("YouTubeMusicClient", "Stream URL fetch error with $userAgent", e)
         }
-        return null
     }
     
     private fun parseStreamUrl(jsonString: String): String? {
         try {
             val root = JsonParser.parseString(jsonString).asJsonObject
             
-            // Check playabilityStatus
-            val playability = root.getAsJsonObject("playabilityStatus")
-            val status = playability?.get("status")?.asString
-            if (status != null && status != "OK") {
-                Log.w("YouTubeMusicClient", "Playability status: $status, reason: ${playability.get("reason")?.asString}")
+            // First, check for an error or unplayable status
+            val playabilityStatus = root.getAsJsonObject("playabilityStatus")
+            val status = playabilityStatus?.get("status")?.asString
+            if (status != "OK") {
+                val reason = playabilityStatus?.get("reason")?.asString ?: "Unknown error"
+                android.util.Log.e("HashMusic", "Playability status: $status - $reason")
+                return null
             }
-
-            val streamingData = root.getAsJsonObject("streamingData") ?: return null
+            
+            val formats = root.getAsJsonObject("streamingData")
+                ?.getAsJsonArray("adaptiveFormats") ?: return null
             
             var bestUrl: String? = null
             var highestBitrate = 0
             
-            val formats = streamingData.getAsJsonArray("adaptiveFormats") ?: JsonArray()
             for (format in formats) {
                 val obj = format.asJsonObject
                 val mimeType = obj.get("mimeType")?.asString ?: ""
-                if (mimeType.contains("audio")) {
+                if (mimeType.startsWith("audio/")) {
                     val bitrate = obj.get("bitrate")?.asInt ?: 0
                     var url = obj.get("url")?.asString
                     
@@ -339,28 +293,9 @@ class YouTubeMusicClient {
                     }
                 }
             }
-
-            if (bestUrl == null) {
-                val directFormats = streamingData.getAsJsonArray("formats") ?: JsonArray()
-                for (format in directFormats) {
-                    val obj = format.asJsonObject
-                    var url = obj.get("url")?.asString
-                    if (url.isNullOrEmpty()) {
-                        val cipher = obj.get("signatureCipher")?.asString ?: obj.get("cipher")?.asString
-                        if (!cipher.isNullOrEmpty()) {
-                            url = extractUrlFromCipher(cipher)
-                        }
-                    }
-                    if (!url.isNullOrEmpty()) {
-                        bestUrl = url
-                        break
-                    }
-                }
-            }
-
             return bestUrl
         } catch (e: Exception) {
-            Log.e("YouTubeMusicClient", "Stream parse error", e)
+            android.util.Log.e("HashMusic", "Error parsing stream URL: ${e.message}", e)
             return null
         }
     }
@@ -394,7 +329,7 @@ class YouTubeMusicClient {
         }
         return null
     }
-    
+
     private fun parseDuration(durationText: String): Long {
         val parts = durationText.split(":")
         return when (parts.size) {
