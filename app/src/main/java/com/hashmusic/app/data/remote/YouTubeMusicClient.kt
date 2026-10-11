@@ -36,10 +36,23 @@ class YouTubeMusicClient {
         )
     )
 
-    private val tvContextMap = mapOf(
+    private val androidVrContextMap = mapOf(
         "client" to mapOf(
-            "clientName" to "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
-            "clientVersion" to "2.0",
+            "clientName" to "ANDROID_VR",
+            "clientVersion" to "1.58.1",
+            "deviceMake" to "Oculus",
+            "deviceModel" to "Quest 3",
+            "osName" to "Android",
+            "osVersion" to "12",
+            "hl" to "en",
+            "gl" to "US"
+        )
+    )
+
+    private val webEmbeddedContextMap = mapOf(
+        "client" to mapOf(
+            "clientName" to "WEB_EMBEDDED_PLAYER",
+            "clientVersion" to "1.20240801.01.00",
             "hl" to "en",
             "gl" to "US"
         )
@@ -51,7 +64,7 @@ class YouTubeMusicClient {
             "clientVersion" to "19.29.1",
             "deviceModel" to "iPhone14,3",
             "osName" to "iPhone",
-            "osVersion" to "17.5.1.21F90",
+            "osVersion" to "17.5.1",
             "hl" to "en",
             "gl" to "US"
         )
@@ -239,16 +252,16 @@ class YouTubeMusicClient {
     
     suspend fun getStreamUrl(videoId: String): String? {
         return withContext(Dispatchers.IO) {
-            // First try TVHTML5_SIMPLY_EMBEDDED_PLAYER context
-            var url = fetchStreamUrlWithContext(videoId, tvContextMap, "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV) AppleWebKit/538.1 (KHTML, like Gecko) TV Safari/538.1")
+            // First try ANDROID_VR context
+            var url = fetchStreamUrlWithContext(videoId, androidVrContextMap, "Mozilla/5.0 (Linux; Android 12; Quest 3) AppleWebKit/537.36")
+            if (!url.isNullOrEmpty()) return@withContext url
+
+            // Fallback to WEB_EMBEDDED_PLAYER
+            url = fetchStreamUrlWithContext(videoId, webEmbeddedContextMap, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
             if (!url.isNullOrEmpty()) return@withContext url
 
             // Fallback to IOS context
             url = fetchStreamUrlWithContext(videoId, iosContextMap, "com.google.ios.youtube/19.29.1 (iPhone14,3; iOS 17.5.1; Scale/3.00)")
-            if (!url.isNullOrEmpty()) return@withContext url
-
-            // Fallback to WEB_REMIX
-            url = fetchStreamUrlWithContext(videoId, webContextMap, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
             return@withContext url
         }
     }
@@ -357,7 +370,7 @@ class YouTubeMusicClient {
             val params = cipherText.split("&")
             var url: String? = null
             var sig: String? = null
-            var sp: String = "sig"
+            var sp = "sig"
             
             for (param in params) {
                 val parts = param.split("=", limit = 2)
