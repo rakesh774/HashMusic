@@ -11,8 +11,8 @@ class MusicRepository(
     private val api: YouTubeMusicClient,
     private val db: AppDatabase
 ) {
-    fun setCookies(cookies: String) {
-        api.setCookies(cookies)
+    fun setCookies(cookieString: String) {
+        api.setCookies(cookieString)
     }
     
     suspend fun searchSongs(query: String): List<Song> = api.searchSongs(query)
@@ -20,10 +20,7 @@ class MusicRepository(
     suspend fun getStreamUrl(videoId: String): String? = api.getStreamUrl(videoId)
     
     fun getLikedSongs() = db.songDao().getLikedSongs()
-    
     fun getDownloadedSongs() = db.songDao().getDownloadedSongs()
-    
-    suspend fun getRemoteLikedSongs(): List<Song> = emptyList()
     
     suspend fun toggleLike(song: Song, isLiked: Boolean) {
         withContext(Dispatchers.IO) {
