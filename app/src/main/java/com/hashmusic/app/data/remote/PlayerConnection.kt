@@ -2,14 +2,17 @@ package com.hashmusic.app.data.remote
 
 import android.content.ComponentName
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.hashmusic.app.service.MusicService
 
+@OptIn(UnstableApi::class)
 object PlayerConnection {
     
     private var controllerFuture: ListenableFuture<MediaController>? = null
