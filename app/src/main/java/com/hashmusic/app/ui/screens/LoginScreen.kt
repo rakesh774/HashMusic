@@ -53,7 +53,7 @@ fun LoginScreen(
                     // For now, use a test session
                     // In production, you'd launch OAuth flow here
                     try {
-                        app.repository.setSession("test-session")
+                        app.repository.setCookies("test-session")
                         onLoginSuccess()
                     } catch (e: Exception) {
                         errorMessage = e.message
