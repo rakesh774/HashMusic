@@ -23,7 +23,9 @@ object PlayerConnection {
         private set
     
     fun connect(context: Context, onConnected: () -> Unit = {}) {
+        android.util.Log.d("HashMusic", "PlayerConnection.connect called")
         if (controller != null) {
+            android.util.Log.d("HashMusic", "Controller already exists")
             onConnected()
             return
         }
@@ -40,9 +42,10 @@ object PlayerConnection {
             try {
                 controller = future.get()
                 isConnected = true
+                android.util.Log.d("HashMusic", "Controller connected successfully!")
                 onConnected()
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("HashMusic", "Controller connection FAILED: ${e.message}", e)
             }
         }, MoreExecutors.directExecutor())
     }
