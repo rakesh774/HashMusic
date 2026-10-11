@@ -2,14 +2,19 @@ package com.hashmusic.app.ui.viewmodel
 
 import android.app.Application
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,23 +27,37 @@ class MainViewModel(
     private val repository: MusicRepository
 ) : AndroidViewModel(application) {
     
+    @OptIn(UnstableApi::class)
     private val player: ExoPlayer by lazy {
-        ExoPlayer.Builder(application).build().apply {
-            addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(isPlayingChanged: Boolean) {
-                    _isPlaying.value = isPlayingChanged
-                }
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            .setAllowCrossProtocolRedirects(true)
 
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_READY && duration > 0) {
-                        val current = _currentSong.value
-                        if (current != null && current.duration <= 0) {
-                            _currentSong.value = current.copy(duration = duration / 1000)
+        val mediaSourceFactory = DefaultMediaSourceFactory(httpDataSourceFactory)
+
+        ExoPlayer.Builder(application)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .build().apply {
+                addListener(object : Player.Listener {
+                    override fun onIsPlayingChanged(isPlayingChanged: Boolean) {
+                        _isPlaying.value = isPlayingChanged
+                    }
+
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        if (playbackState == Player.STATE_READY && duration > 0) {
+                            val current = _currentSong.value
+                            if (current != null && current.duration <= 0) {
+                                _currentSong.value = current.copy(duration = duration / 1000)
+                            }
                         }
                     }
-                }
-            })
-        }
+
+                    override fun onPlayerError(error: PlaybackException) {
+                        Log.e("MainViewModel", "ExoPlayer Error: ${error.errorCodeName}", error)
+                        _isPlaying.value = false
+                    }
+                })
+            }
     }
 
     private val _recommendedSongs = MutableStateFlow<List<Song>>(emptyList())
@@ -115,6 +134,7 @@ class MainViewModel(
             try {
                 val streamUrl = repository.getStreamUrl(song.videoId)
                 if (!streamUrl.isNullOrEmpty()) {
+                    Log.d("MainViewModel", "Playing stream URL: $streamUrl")
                     val mediaItem = MediaItem.Builder()
                         .setUri(streamUrl)
                         .setMediaId(song.videoId)
