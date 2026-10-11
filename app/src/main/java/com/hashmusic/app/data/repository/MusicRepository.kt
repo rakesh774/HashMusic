@@ -19,7 +19,12 @@ class MusicRepository(
 
     suspend fun searchSongs(query: String): List<Song> = api.searchSongs(query)
     
-    suspend fun getStreamUrl(videoId: String): String? = api.getStreamUrl(videoId)
+    suspend fun getStreamUrl(videoId: String): String? {
+        android.util.Log.d("HashMusic", "Repository.getStreamUrl: $videoId")
+        val url = api.getStreamUrl(videoId)
+        android.util.Log.d("HashMusic", "Repository got URL: ${url?.take(50)}...")
+        return url
+    }
     
     fun getLikedSongs() = db.songDao().getLikedSongs()
     fun getDownloadedSongs() = db.songDao().getDownloadedSongs()
