@@ -46,7 +46,10 @@ fun HashMusicApp() {
     var isLoggedIn by remember { mutableStateOf(false) }
     
     if (!isLoggedIn) {
-        LoginScreen(onLoginSuccess = { isLoggedIn = true })
+        LoginScreen(onLoginSuccess = { cookies ->
+            app.repository.setCookies(cookies)
+            isLoggedIn = true
+        })
     } else {
         // Main app content
         val navController = rememberNavController()
