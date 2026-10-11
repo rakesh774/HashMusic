@@ -51,7 +51,6 @@ fun HashMusicApp() {
             isLoggedIn = true
         })
     } else {
-        // Main app content
         val navController = rememberNavController()
         val screens = listOf(Screen.Home, Screen.Search, Screen.Library)
         val currentSong by viewModel.currentSong.collectAsState()
@@ -65,7 +64,7 @@ fun HashMusicApp() {
                         currentSong = currentSong,
                         isPlaying = isPlaying,
                         onPlayPause = { viewModel.togglePlayPause() },
-                        onBarClick = { /* Navigate to now playing */ }
+                        onBarClick = { }
                     )
                     NavigationBar {
                         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -106,7 +105,6 @@ fun HashMusicApp() {
                     LibraryScreen(
                         likedSongs = likedSongs,
                         onSongClick = { entity ->
-                            // Convert entity to model for playing
                             val song = com.hashmusic.app.model.Song(
                                 id = entity.id,
                                 title = entity.title,
