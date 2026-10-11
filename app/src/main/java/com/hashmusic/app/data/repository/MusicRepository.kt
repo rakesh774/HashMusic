@@ -15,6 +15,8 @@ class MusicRepository(
         api.setCookies(cookieString)
     }
     
+    suspend fun getRecommendedSongs(): List<Song> = api.getRecommendedSongs()
+
     suspend fun searchSongs(query: String): List<Song> = api.searchSongs(query)
     
     suspend fun getStreamUrl(videoId: String): String? = api.getStreamUrl(videoId)

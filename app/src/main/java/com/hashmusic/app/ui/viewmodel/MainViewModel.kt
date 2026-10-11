@@ -1,11 +1,15 @@
 package com.hashmusic.app.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hashmusic.app.HashMusicApplication
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +22,31 @@ class MainViewModel(
     private val repository: MusicRepository
 ) : AndroidViewModel(application) {
     
+    private val player: ExoPlayer by lazy {
+        ExoPlayer.Builder(application).build().apply {
+            addListener(object : Player.Listener {
+                override fun onIsPlayingChanged(isPlayingChanged: Boolean) {
+                    _isPlaying.value = isPlayingChanged
+                }
+
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY && duration > 0) {
+                        val current = _currentSong.value
+                        if (current != null && current.duration <= 0) {
+                            _currentSong.value = current.copy(duration = duration / 1000)
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    private val _recommendedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val recommendedSongs: StateFlow<List<Song>> = _recommendedSongs.asStateFlow()
+
+    private val _isLoadingRecommended = MutableStateFlow(false)
+    val isLoadingRecommended: StateFlow<Boolean> = _isLoadingRecommended.asStateFlow()
+
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
     
@@ -35,6 +64,23 @@ class MainViewModel(
     
     val likedSongs = repository.getLikedSongs()
     
+    init {
+        loadRecommendations()
+    }
+
+    fun loadRecommendations() {
+        viewModelScope.launch {
+            _isLoadingRecommended.value = true
+            try {
+                _recommendedSongs.value = repository.getRecommendedSongs()
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error loading recommendations", e)
+            } finally {
+                _isLoadingRecommended.value = false
+            }
+        }
+    }
+
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
         if (query.length >= 2) {
@@ -55,7 +101,7 @@ class MainViewModel(
             try {
                 _searchResults.value = repository.searchSongs(query)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("MainViewModel", "Search error", e)
             } finally {
                 _isSearching.value = false
             }
@@ -66,17 +112,44 @@ class MainViewModel(
         _currentSong.value = song
         _isPlaying.value = true
         viewModelScope.launch {
-            val streamUrl = repository.getStreamUrl(song.videoId)
-            if (streamUrl != null) {
-                val app = getApplication<HashMusicApplication>()
-                // Stream URL is ready - now we can play
-                // In a real app, bind to MusicService here
+            try {
+                val streamUrl = repository.getStreamUrl(song.videoId)
+                if (!streamUrl.isNullOrEmpty()) {
+                    val mediaItem = MediaItem.Builder()
+                        .setUri(streamUrl)
+                        .setMediaId(song.videoId)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(song.title)
+                                .setArtist(song.artist)
+                                .setArtworkUri(android.net.Uri.parse(song.albumArt))
+                                .build()
+                        )
+                        .build()
+                    
+                    player.setMediaItem(mediaItem)
+                    player.prepare()
+                    player.play()
+                } else {
+                    Log.e("MainViewModel", "Failed to get stream URL for ${song.videoId}")
+                    _isPlaying.value = false
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error playing song", e)
+                _isPlaying.value = false
             }
         }
     }
     
     fun togglePlayPause() {
-        _isPlaying.value = !_isPlaying.value
+        if (player.isPlaying) {
+            player.pause()
+        } else {
+            if (player.playbackState == Player.STATE_ENDED) {
+                player.seekTo(0)
+            }
+            player.play()
+        }
     }
     
     fun toggleLike(song: Song) {
@@ -88,6 +161,11 @@ class MainViewModel(
 
     fun loadLikedSongsFromRemote() {
         // Reserved for future remote liked songs syncing
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        player.release()
     }
 }
 

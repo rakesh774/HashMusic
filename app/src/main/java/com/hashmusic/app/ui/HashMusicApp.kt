@@ -99,7 +99,7 @@ fun HashMusicApp() {
                 startDestination = Screen.Home.route,
                 modifier = Modifier.padding(paddingValues)
             ) {
-                composable(Screen.Home.route) { HomeScreen() }
+                composable(Screen.Home.route) { HomeScreen(viewModel = viewModel) }
                 composable(Screen.Search.route) { SearchScreen(viewModel = viewModel) }
                 composable(Screen.Library.route) { 
                     LibraryScreen(

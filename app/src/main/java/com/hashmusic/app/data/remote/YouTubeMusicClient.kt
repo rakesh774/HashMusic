@@ -26,10 +26,20 @@ class YouTubeMusicClient {
     private val API_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
     private val BASE_URL = "https://music.youtube.com/youtubei/v1"
     
-    private val contextMap = mapOf(
+    private val webContextMap = mapOf(
         "client" to mapOf(
             "clientName" to "WEB_REMIX",
             "clientVersion" to "1.20240101.01.00",
+            "hl" to "en",
+            "gl" to "US"
+        )
+    )
+
+    private val androidContextMap = mapOf(
+        "client" to mapOf(
+            "clientName" to "ANDROID",
+            "clientVersion" to "19.05.36",
+            "androidSdkVersion" to 30,
             "hl" to "en",
             "gl" to "US"
         )
@@ -42,11 +52,16 @@ class YouTubeMusicClient {
         cookies = cookieString
     }
     
+    suspend fun getRecommendedSongs(): List<Song> {
+        val trending = searchSongs("Top Hits")
+        return if (trending.isNotEmpty()) trending else searchSongs("Trending Songs")
+    }
+
     suspend fun searchSongs(query: String): List<Song> {
         return withContext(Dispatchers.IO) {
             try {
                 val body = mapOf(
-                    "context" to contextMap,
+                    "context" to webContextMap,
                     "query" to query,
                     "params" to "EgWKAQIIAWoQEAMQBBAJEAoQBRAREBAQFQ=="
                 )
@@ -77,6 +92,7 @@ class YouTubeMusicClient {
     
     private fun parseSearchResponse(jsonString: String): List<Song> {
         val songs = mutableListOf<Song>()
+        val durationRegex = Regex("""\b\d{1,2}:\d{2}(:\d{2})?\b""")
         try {
             val root = JsonParser.parseString(jsonString).asJsonObject
             val contentsObj = root.getAsJsonObject("contents") ?: return songs
@@ -134,35 +150,25 @@ class YouTubeMusicClient {
                     val title = flex0?.getAsJsonArray("runs")
                         ?.get(0)?.asJsonObject?.get("text")?.asString ?: continue
 
-                    // Artist & Album & Duration
+                    // Artist & Duration parsing
                     var artist = "Unknown Artist"
                     var durationText = "0:00"
 
-                    if (flexColumns.size() > 1) {
-                        val flex1Runs = flexColumns[1].asJsonObject
+                    for (col in flexColumns) {
+                        val runs = col.asJsonObject
                             ?.getAsJsonObject("musicResponsiveListItemFlexColumnRenderer")
-                            ?.getAsJsonObject("text")?.getAsJsonArray("runs")
+                            ?.getAsJsonObject("text")
+                            ?.getAsJsonArray("runs") ?: continue
 
-                        if (flex1Runs != null && flex1Runs.size() > 0) {
-                            val runsList = mutableListOf<String>()
-                            for (r in flex1Runs) {
-                                val txt = r.asJsonObject?.get("text")?.asString
-                                if (!txt.isNullOrEmpty() && txt != " • ") {
-                                    runsList.add(txt)
+                        for (r in runs) {
+                            val txt = r.asJsonObject?.get("text")?.asString?.trim() ?: continue
+                            if (txt != " • " && txt != title && !durationRegex.matches(txt)) {
+                                if (artist == "Unknown Artist") {
+                                    artist = txt
                                 }
+                            } else if (durationRegex.matches(txt)) {
+                                durationText = txt
                             }
-                            if (runsList.isNotEmpty()) {
-                                artist = runsList.first()
-                            }
-                        }
-                    }
-
-                    if (flexColumns.size() > 2) {
-                        val flex2Runs = flexColumns[2].asJsonObject
-                            ?.getAsJsonObject("musicResponsiveListItemFlexColumnRenderer")
-                            ?.getAsJsonObject("text")?.getAsJsonArray("runs")
-                        if (flex2Runs != null && flex2Runs.size() > 0) {
-                            durationText = flex2Runs[0].asJsonObject?.get("text")?.asString ?: "0:00"
                         }
                     }
 
@@ -224,7 +230,7 @@ class YouTubeMusicClient {
         return withContext(Dispatchers.IO) {
             try {
                 val body = mapOf(
-                    "context" to contextMap,
+                    "context" to androidContextMap,
                     "videoId" to videoId,
                     "contentCheckOk" to true,
                     "racyCheckOk" to true
@@ -236,7 +242,7 @@ class YouTubeMusicClient {
                 val requestBuilder = Request.Builder()
                     .url("$BASE_URL/player?key=$API_KEY")
                     .post(requestBody)
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
                 
                 if (cookies.isNotEmpty()) {
                     requestBuilder.header("Cookie", cookies)
@@ -266,10 +272,10 @@ class YouTubeMusicClient {
             for (format in formats) {
                 val obj = format.asJsonObject
                 val mimeType = obj.get("mimeType")?.asString ?: ""
-                if (mimeType.startsWith("audio/")) {
+                val url = obj.get("url")?.asString
+                if (url != null && mimeType.contains("audio")) {
                     val bitrate = obj.get("bitrate")?.asInt ?: 0
-                    val url = obj.get("url")?.asString
-                    if (url != null && bitrate > highestBitrate) {
+                    if (bitrate > highestBitrate) {
                         highestBitrate = bitrate
                         bestUrl = url
                     }
