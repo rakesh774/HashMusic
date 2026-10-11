@@ -11,13 +11,13 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.hashmusic.app.MainActivity
 
+@OptIn(UnstableApi::class)
 class MusicService : MediaSessionService() {
     
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
     
     private val sessionCallback = object : MediaSession.Callback {
-        @OptIn(UnstableApi::class)
         override fun onPlaybackResumption(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo
