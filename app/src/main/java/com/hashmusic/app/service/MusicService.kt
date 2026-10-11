@@ -31,32 +31,6 @@ class MusicService : MediaSessionService() {
             .build()
     }
     
-    fun playSong(url: String, title: String, artist: String, albumArt: String) {
-        val mediaItem = MediaItem.Builder()
-            .setUri(url)
-            .setMediaId(url)
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(title)
-                    .setArtist(artist)
-                    .setArtworkUri(android.net.Uri.parse(albumArt))
-                    .build()
-            )
-            .build()
-        
-        player?.setMediaItem(mediaItem)
-        player?.prepare()
-        player?.play()
-    }
-    
-    fun pausePlayback() {
-        player?.pause()
-    }
-    
-    fun resumePlayback() {
-        player?.play()
-    }
-    
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
     }
@@ -66,6 +40,8 @@ class MusicService : MediaSessionService() {
             player?.release()
             release()
         }
+        player = null
+        mediaSession = null
         super.onDestroy()
     }
 }
