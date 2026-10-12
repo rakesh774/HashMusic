@@ -17,7 +17,6 @@ import com.hashmusic.app.data.remote.PlayerConnection
 import com.hashmusic.app.data.remote.YouTubeService
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,21 +56,6 @@ class MainViewModel(
 
     init {
         loadRecommendations()
-
-        // Poll player state so UI stays in sync
-        viewModelScope.launch {
-            while (true) {
-                delay(500)
-                try {
-                    val playing = PlayerConnection.isPlaying()
-                    if (_isPlaying.value != playing) {
-                        _isPlaying.value = playing
-                    }
-                } catch (e: Exception) {
-                    // ignore
-                }
-            }
-        }
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestScopes(Scope(YouTubeScopes.YOUTUBE_READONLY))
