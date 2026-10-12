@@ -46,10 +46,13 @@ fun HashMusicApp() {
     var isLoggedIn by remember { mutableStateOf(false) }
     
     if (!isLoggedIn) {
-        LoginScreen(onLoginSuccess = { cookies ->
-            app.repository.setCookies(cookies)
-            isLoggedIn = true
-        })
+        LoginScreen(
+            onLoginSuccess = { account ->
+                viewModel.handleSignInResult(account)
+                isLoggedIn = true
+            },
+            getSignInIntent = { viewModel.getGoogleSignInIntent() }
+        )
     } else {
         val navController = rememberNavController()
         val screens = listOf(Screen.Home, Screen.Search, Screen.Library)
