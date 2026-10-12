@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hashmusic.app.HashMusicApplication
 import com.hashmusic.app.ui.components.NowPlayingBar
 import com.hashmusic.app.ui.screens.HomeScreen
+import com.hashmusic.app.ui.screens.LibraryFromApiScreen
 import com.hashmusic.app.ui.screens.LibraryScreen
 import com.hashmusic.app.ui.screens.LoginScreen
 import com.hashmusic.app.ui.screens.SearchScreen
@@ -58,7 +59,6 @@ fun HashMusicApp() {
         val screens = listOf(Screen.Home, Screen.Search, Screen.Library)
         val currentSong by viewModel.currentSong.collectAsState()
         val isPlaying by viewModel.isPlaying.collectAsState()
-        val likedSongs by viewModel.likedSongs.collectAsState(initial = emptyList())
         
         Scaffold(
             bottomBar = {
@@ -104,38 +104,9 @@ fun HashMusicApp() {
             ) {
                 composable(Screen.Home.route) { HomeScreen(viewModel = viewModel) }
                 composable(Screen.Search.route) { SearchScreen(viewModel = viewModel) }
-                composable(Screen.Library.route) { 
-                    LibraryScreen(
-                        likedSongs = likedSongs.map { song ->
-                            com.hashmusic.app.data.local.SongEntity(
-                                id = song.id,
-                                title = song.title,
-                                artist = song.artist,
-                                albumArt = song.albumArt,
-                                duration = song.duration,
-                                videoId = song.videoId,
-                                album = song.album,
-                                isLiked = song.isLiked,
-                                isDownloaded = song.isDownloaded,
-                                localPath = song.localPath
-                            )
-                        },
-                        onSongClick = { entity ->
-                            val song = com.hashmusic.app.model.Song(
-                                id = entity.id,
-                                title = entity.title,
-                                artist = entity.artist,
-                                albumArt = entity.albumArt,
-                                duration = entity.duration,
-                                videoId = entity.videoId,
-                                album = entity.album,
-                                isLiked = entity.isLiked,
-                                isDownloaded = entity.isDownloaded,
-                                localPath = entity.localPath
-                            )
-                            viewModel.playSong(song)
-                        }
-                    ) 
+                composable(Screen.Library.route) {
+                    val likedSongs by viewModel.likedSongs.collectAsState()
+                    LibraryFromApiScreen(songs = likedSongs)
                 }
             }
         }
