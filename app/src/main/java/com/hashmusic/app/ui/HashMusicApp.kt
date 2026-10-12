@@ -103,7 +103,20 @@ fun HashMusicApp() {
                 composable(Screen.Search.route) { SearchScreen(viewModel = viewModel) }
                 composable(Screen.Library.route) { 
                     LibraryScreen(
-                        likedSongs = likedSongs,
+                        likedSongs = likedSongs.map { song ->
+                            com.hashmusic.app.data.local.SongEntity(
+                                id = song.id,
+                                title = song.title,
+                                artist = song.artist,
+                                albumArt = song.albumArt,
+                                duration = song.duration,
+                                videoId = song.videoId,
+                                album = song.album,
+                                isLiked = song.isLiked,
+                                isDownloaded = song.isDownloaded,
+                                localPath = song.localPath
+                            )
+                        },
                         onSongClick = { entity ->
                             val song = com.hashmusic.app.model.Song(
                                 id = entity.id,

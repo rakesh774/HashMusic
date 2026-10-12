@@ -6,8 +6,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.Scope
+import com.google.api.services.youtube.YouTubeScopes
 import com.hashmusic.app.HashMusicApplication
 import com.hashmusic.app.data.remote.PlayerConnection
+import com.hashmusic.app.data.remote.YouTubeService
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
 import kotlinx.coroutines.delay
@@ -42,8 +49,12 @@ class MainViewModel(
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
     
-    val likedSongs = repository.getLikedSongs()
-    
+    private val _likedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val likedSongs: StateFlow<List<Song>> = _likedSongs.asStateFlow()
+
+    private val youtubeService = YouTubeService(getApplication())
+    lateinit var googleSignInClient: GoogleSignInClient
+
     init {
         loadRecommendations()
 
@@ -60,6 +71,28 @@ class MainViewModel(
                     // ignore
                 }
             }
+        }
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestScopes(Scope(YouTubeScopes.YOUTUBE_READONLY))
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(getApplication(), gso)
+    }
+
+    fun getGoogleSignInIntent() = googleSignInClient.signInIntent
+
+    fun handleSignInResult(account: GoogleSignInAccount?) {
+        if (account != null) {
+            youtubeService.setAuthToken(account)
+            loadLikedSongs()
+        }
+    }
+
+    private fun loadLikedSongs() {
+        viewModelScope.launch {
+            val songs = youtubeService.getLikedVideos()
+            _likedSongs.value = songs
         }
     }
 
@@ -158,7 +191,7 @@ class MainViewModel(
     }
 
     fun loadLikedSongsFromRemote() {
-        // Reserved for future remote liked songs syncing
+        loadLikedSongs()
     }
 }
 
