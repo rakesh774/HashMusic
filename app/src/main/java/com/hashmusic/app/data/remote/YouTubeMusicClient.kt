@@ -16,7 +16,12 @@ import java.net.URLDecoder
 import java.util.concurrent.TimeUnit
 
 class YouTubeMusicClient {
-    
+
+    var lastError: String = ""
+        private set
+    var lastPlayerResponse: String = ""
+        private set
+
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -246,8 +251,19 @@ class YouTubeMusicClient {
                 val response = client.newCall(request).execute()
                 val responseBody = response.body?.string() ?: return@withContext null
                 
+                // Save response for debugging
+                lastPlayerResponse = responseBody
+                
+                val root = JsonParser.parseString(responseBody).asJsonObject
+                val playabilityStatus = root.getAsJsonObject("playabilityStatus")
+                val status = playabilityStatus?.get("status")?.asString
+                val reason = playabilityStatus?.get("reason")?.asString
+                
+                lastError = "Status: $status, Reason: $reason"
+                
                 parseStreamUrl(responseBody)
             } catch (e: Exception) {
+                lastError = "Exception: ${e.message}"
                 e.printStackTrace()
                 null
             }

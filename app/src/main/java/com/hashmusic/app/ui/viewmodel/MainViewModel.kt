@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.hashmusic.app.HashMusicApplication
 import com.hashmusic.app.data.remote.PlayerConnection
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
@@ -103,32 +104,42 @@ class MainViewModel(
     }
     
     fun playSong(song: Song) {
-        android.util.Log.d("HashMusic", "playSong called: ${song.title} by ${song.artist}")
+        val ctx = getApplication<HashMusicApplication>()
+        
         _currentSong.value = song
         _isPlaying.value = true
         
         viewModelScope.launch {
             try {
-                android.util.Log.d("HashMusic", "Fetching stream URL for videoId: ${song.videoId}")
                 val streamUrl = repository.getStreamUrl(song.videoId)
-                android.util.Log.d("HashMusic", "Stream URL result: $streamUrl")
                 
-                if (streamUrl != null) {
-                    android.util.Log.d("HashMusic", "PlayerConnection.isConnected = ${PlayerConnection.isConnected}")
-                    android.util.Log.d("HashMusic", "Calling PlayerConnection.playSong")
-                    PlayerConnection.playSong(
-                        url = streamUrl,
-                        title = song.title,
-                        artist = song.artist,
-                        albumArt = song.albumArt
-                    )
-                    android.util.Log.d("HashMusic", "playSong call completed")
-                } else {
-                    android.util.Log.e("HashMusic", "Stream URL was null - cannot play")
+                if (streamUrl == null) {
+                    val apiError = (repository as? com.hashmusic.app.data.repository.MusicRepository)
+                        ?.let { "Check Toast above" } ?: "Unknown"
+                    android.widget.Toast.makeText(
+                        ctx,
+                        "❌ Stream failed.\nOpen the Logcat filter tag:HashMusic\nOr check on-screen error",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
                     _isPlaying.value = false
+                    return@launch
                 }
+                
+                if (!PlayerConnection.isConnected) {
+                    android.widget.Toast.makeText(ctx, "❌ Player not connected", android.widget.Toast.LENGTH_LONG).show()
+                    _isPlaying.value = false
+                    return@launch
+                }
+                
+                PlayerConnection.playSong(
+                    url = streamUrl,
+                    title = song.title,
+                    artist = song.artist,
+                    albumArt = song.albumArt
+                )
+                
             } catch (e: Exception) {
-                android.util.Log.e("HashMusic", "Error in playSong: ${e.message}", e)
+                android.widget.Toast.makeText(ctx, "❌ ${e.message}", android.widget.Toast.LENGTH_LONG).show()
                 _isPlaying.value = false
             }
         }
