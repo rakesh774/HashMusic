@@ -25,7 +25,7 @@
 
         <meta-data
             android:name="com.google.android.gms.client_id"
-            android:value="YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com" />
+            android:value="325162648384-hrah9shk5npbpia6efnuv0inath0c1ic.apps.googleusercontent.com" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

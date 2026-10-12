@@ -1,10 +1,11 @@
 package com.hashmusic.app.data.remote
 
 import android.content.Context
-import com.google.api.client.http.HttpRequestInitializer
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.youtube.YouTube
+import com.google.api.services.youtube.YouTubeScopes
 import com.google.api.services.youtube.model.PlaylistItemListResponse
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.hashmusic.app.model.Song
@@ -16,18 +17,15 @@ class YouTubeService(private val context: Context) {
     private var youtube: YouTube? = null
 
     fun setAuthToken(account: GoogleSignInAccount) {
-        val credential = com.google.api.client.googleapis.auth.oauth2.GoogleCredential.Builder()
-            .setTransport(NetHttpTransport())
-            .setJsonFactory(GsonFactory.getDefaultInstance())
-            .setClientSecrets("", "") // Not needed for Android client ID
-            .build()
-            .setAccessToken(account.idToken)
-            .setRefreshToken(account.serverAuthCode)
+        val credential = GoogleAccountCredential.usingOAuth2(
+            context,
+            listOf(YouTubeScopes.YOUTUBE_READONLY)
+        ).setSelectedAccount(account.account)
 
         youtube = YouTube.Builder(
             NetHttpTransport(),
             GsonFactory.getDefaultInstance(),
-            HttpRequestInitializer { request -> credential.initialize(request) }
+            credential
         ).setApplicationName("HashMusic").build()
     }
 

@@ -142,39 +142,37 @@ class MainViewModel(
         _currentSong.value = song
         _isPlaying.value = true
         
-        viewModelScope.launch {
+        try {
+            // Build a YouTube Music deep link with the video ID
+            val ytMusicIntent = android.content.Intent(
+                android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://music.youtube.com/watch?v=${song.videoId}")
+            )
+            
+            // Try to open in the YouTube Music app first
+            ytMusicIntent.setPackage("com.google.android.apps.youtube.music")
+            
             try {
-                val streamUrl = repository.getStreamUrl(song.videoId)
-                
-                if (streamUrl == null) {
-                    val apiError = (repository as? com.hashmusic.app.data.repository.MusicRepository)
-                        ?.let { "Check Toast above" } ?: "Unknown"
-                    android.widget.Toast.makeText(
-                        ctx,
-                        "❌ Stream failed.\nOpen the Logcat filter tag:HashMusic\nOr check on-screen error",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show()
-                    _isPlaying.value = false
-                    return@launch
-                }
-                
-                if (!PlayerConnection.isConnected) {
-                    android.widget.Toast.makeText(ctx, "❌ Player not connected", android.widget.Toast.LENGTH_LONG).show()
-                    _isPlaying.value = false
-                    return@launch
-                }
-                
-                PlayerConnection.playSong(
-                    url = streamUrl,
-                    title = song.title,
-                    artist = song.artist,
-                    albumArt = song.albumArt
+                ytMusicIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                ctx.startActivity(ytMusicIntent)
+                android.widget.Toast.makeText(ctx, "Opening in YouTube Music...", android.widget.Toast.LENGTH_SHORT).show()
+            } catch (e: android.content.ActivityNotFoundException) {
+                // If YouTube Music app is not installed, fall back to browser or YouTube app
+                val fallbackIntent = android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://music.youtube.com/watch?v=${song.videoId}")
                 )
-                
-            } catch (e: Exception) {
-                android.widget.Toast.makeText(ctx, "❌ ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                _isPlaying.value = false
+                fallbackIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                ctx.startActivity(fallbackIntent)
+                android.widget.Toast.makeText(ctx, "Opening in browser...", android.widget.Toast.LENGTH_SHORT).show()
             }
+            
+            // Reset playing state since we're handing off to another app
+            _isPlaying.value = false
+            
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(ctx, "❌ ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            _isPlaying.value = false
         }
     }
 
