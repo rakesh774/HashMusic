@@ -79,7 +79,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     // NewPipeExtractor
-    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.24.2")
+    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.5")
     
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
