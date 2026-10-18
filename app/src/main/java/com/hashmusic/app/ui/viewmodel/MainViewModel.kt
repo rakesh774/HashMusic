@@ -16,6 +16,9 @@ import com.hashmusic.app.data.remote.PlayerConnection
 import com.hashmusic.app.data.remote.YouTubeService
 import com.hashmusic.app.data.repository.MusicRepository
 import com.hashmusic.app.model.Song
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.session.MediaController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -119,31 +122,37 @@ class MainViewModel(
         }
     }
     
-    fun playSong(song: Song) {
+    fun playSong(song: Song, controller: MediaController? = null) {
         _currentSong.value = song
-        _isPlaying.value = true
 
         viewModelScope.launch {
             try {
                 val streamUrl = repository.getStreamUrl(song.videoId)
-                if (streamUrl != null) {
-                    PlayerConnection.playSong(
-                        url = streamUrl,
-                        title = song.title,
-                        artist = song.artist,
-                        albumArt = song.albumArt
-                    )
+                if (streamUrl != null && controller != null) {
+                    val mediaItem = MediaItem.Builder()
+                        .setUri(streamUrl)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(song.title)
+                                .setArtist(song.artist)
+                                .setArtworkUri(android.net.Uri.parse(song.albumArt))
+                                .build()
+                        )
+                        .build()
+
+                    controller.setMediaItem(mediaItem)
+                    controller.prepare()
+                    controller.play()
+                    _isPlaying.value = true
                 } else {
                     android.widget.Toast.makeText(
                         getApplication(),
-                        "Could not extract stream URL",
+                        "Could not play song or controller is null",
                         android.widget.Toast.LENGTH_LONG
                     ).show()
-                    _isPlaying.value = false
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _isPlaying.value = false
             }
         }
     }

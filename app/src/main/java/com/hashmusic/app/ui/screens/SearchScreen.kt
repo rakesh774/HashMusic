@@ -26,7 +26,12 @@ import com.hashmusic.app.ui.viewmodel.MainViewModelFactory
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    viewModel: MainViewModel,
+    viewModel: MainViewModel = viewModel(
+        factory = MainViewModelFactory(
+            LocalContext.current.applicationContext as HashMusicApplication,
+            (LocalContext.current.applicationContext as HashMusicApplication).repository
+        )
+    ),
     mediaController: MediaController? = null
 ) {
     LaunchedEffect(Unit) {
@@ -68,7 +73,7 @@ fun SearchScreen(
                 items(searchResults) { song ->
                     SongListItem(
                         song = song,
-                        onClick = { viewModel.playSong(song) }
+                        onClick = { viewModel.playSong(song, mediaController) }
                     )
                 }
                 if (searchResults.isEmpty() && searchQuery.isNotEmpty()) {

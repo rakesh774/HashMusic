@@ -73,7 +73,7 @@ fun HomeScreen(
                             items(recommendedSongs.take(6)) { song ->
                                 RecommendedSongCard(
                                     song = song,
-                                    onClick = { viewModel.playSong(song) }
+                                    onClick = { viewModel.playSong(song, mediaController) }
                                 )
                             }
                         }
@@ -93,7 +93,7 @@ fun HomeScreen(
                     Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                         SongListItem(
                             song = song,
-                            onClick = { viewModel.playSong(song) }
+                            onClick = { viewModel.playSong(song, mediaController) }
                         )
                     }
                 }
