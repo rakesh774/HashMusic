@@ -2,6 +2,7 @@ package com.hashmusic.app.data.repository
 
 import com.hashmusic.app.data.local.AppDatabase
 import com.hashmusic.app.data.local.SongEntity
+import com.hashmusic.app.data.remote.NewPipeStreamExtractor
 import com.hashmusic.app.data.remote.YouTubeMusicClient
 import com.hashmusic.app.model.Song
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +12,8 @@ class MusicRepository(
     private val api: YouTubeMusicClient,
     private val db: AppDatabase
 ) {
+    private val newPipeExtractor = NewPipeStreamExtractor()
+
     fun setCookies(cookieString: String) {
         api.setCookies(cookieString)
     }
@@ -20,10 +23,7 @@ class MusicRepository(
     suspend fun searchSongs(query: String): List<Song> = api.searchSongs(query)
     
     suspend fun getStreamUrl(videoId: String): String? {
-        android.util.Log.d("HashMusic", "Repository.getStreamUrl: $videoId")
-        val url = api.getStreamUrl(videoId)
-        android.util.Log.d("HashMusic", "Repository got URL: ${url?.take(50)}...")
-        return url
+        return newPipeExtractor.getAudioStreamUrl(videoId)
     }
     
     fun getLikedSongs() = db.songDao().getLikedSongs()
