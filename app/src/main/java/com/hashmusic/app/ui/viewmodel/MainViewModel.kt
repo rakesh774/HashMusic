@@ -12,7 +12,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.youtube.YouTubeScopes
-import com.hashmusic.app.HashMusicApplication
 import com.hashmusic.app.data.remote.PlayerConnection
 import com.hashmusic.app.data.remote.YouTubeService
 import com.hashmusic.app.data.repository.MusicRepository
@@ -121,42 +120,31 @@ class MainViewModel(
     }
     
     fun playSong(song: Song) {
-        val ctx = getApplication<HashMusicApplication>()
-        
         _currentSong.value = song
         _isPlaying.value = true
-        
-        try {
-            // Build a YouTube Music deep link with the video ID
-            val ytMusicIntent = android.content.Intent(
-                android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse("https://music.youtube.com/watch?v=${song.videoId}")
-            )
-            
-            // Try to open in the YouTube Music app first
-            ytMusicIntent.setPackage("com.google.android.apps.youtube.music")
-            
+
+        viewModelScope.launch {
             try {
-                ytMusicIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                ctx.startActivity(ytMusicIntent)
-                android.widget.Toast.makeText(ctx, "Opening in YouTube Music...", android.widget.Toast.LENGTH_SHORT).show()
-            } catch (e: android.content.ActivityNotFoundException) {
-                // If YouTube Music app is not installed, fall back to browser or YouTube app
-                val fallbackIntent = android.content.Intent(
-                    android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://music.youtube.com/watch?v=${song.videoId}")
-                )
-                fallbackIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                ctx.startActivity(fallbackIntent)
-                android.widget.Toast.makeText(ctx, "Opening in browser...", android.widget.Toast.LENGTH_SHORT).show()
+                val streamUrl = repository.getStreamUrl(song.videoId)
+                if (streamUrl != null) {
+                    PlayerConnection.playSong(
+                        url = streamUrl,
+                        title = song.title,
+                        artist = song.artist,
+                        albumArt = song.albumArt
+                    )
+                } else {
+                    android.widget.Toast.makeText(
+                        getApplication(),
+                        "Could not extract stream URL",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    _isPlaying.value = false
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _isPlaying.value = false
             }
-            
-            // Reset playing state since we're handing off to another app
-            _isPlaying.value = false
-            
-        } catch (e: Exception) {
-            android.widget.Toast.makeText(ctx, "❌ ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-            _isPlaying.value = false
         }
     }
 
