@@ -20,10 +20,10 @@ class NewPipeStreamExtractor {
                 extractor.fetchPage()
 
                 val audioStreams = extractor.audioStreams
-                // Get the best audio stream (highest bitrate)
                 val bestAudio = audioStreams.maxByOrNull { it.averageBitrate }
                 bestAudio?.content
             } catch (e: Exception) {
+                android.util.Log.e("HashMusic", "NewPipe extraction failed: ${e.message}", e)
                 e.printStackTrace()
                 null
             }
