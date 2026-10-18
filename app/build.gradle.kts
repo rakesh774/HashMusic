@@ -77,6 +77,9 @@ dependencies {
     implementation("com.google.apis:google-api-services-youtube:v3-rev20230816-2.0.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // NewPipeExtractor
+    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.24.2")
     
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
