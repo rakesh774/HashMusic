@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -26,6 +27,7 @@ import com.hashmusic.app.ui.screens.HomeScreen
 import com.hashmusic.app.ui.screens.LibraryFromApiScreen
 import com.hashmusic.app.ui.screens.LibraryScreen
 import com.hashmusic.app.ui.screens.LoginScreen
+import com.hashmusic.app.ui.screens.NowPlayingScreen
 import com.hashmusic.app.ui.screens.SearchScreen
 import com.hashmusic.app.ui.viewmodel.MainViewModel
 import com.hashmusic.app.ui.viewmodel.MainViewModelFactory
@@ -34,8 +36,10 @@ sealed class Screen(val route: String, val title: String) {
     object Home : Screen("home", "Home")
     object Search : Screen("search", "Search")
     object Library : Screen("library", "Library")
+    object NowPlaying : Screen("now_playing", "Now Playing")
 }
 
+@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HashMusicApp(mediaController: MediaController?) {
@@ -68,7 +72,7 @@ fun HashMusicApp(mediaController: MediaController?) {
                         currentSong = currentSong,
                         isPlaying = isPlaying,
                         onPlayPause = { viewModel.togglePlayPause() },
-                        onBarClick = { }
+                        onBarClick = { navController.navigate(Screen.NowPlaying.route) }
                     )
                     NavigationBar {
                         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -81,6 +85,7 @@ fun HashMusicApp(mediaController: MediaController?) {
                                         Screen.Home -> Icon(Icons.Filled.Home, contentDescription = null)
                                         Screen.Search -> Icon(Icons.Filled.Search, contentDescription = null)
                                         Screen.Library -> Icon(Icons.Filled.LibraryMusic, contentDescription = null)
+                                        else -> {}
                                     }
                                 },
                                 label = { Text(screen.title) },
@@ -118,6 +123,17 @@ fun HashMusicApp(mediaController: MediaController?) {
                 composable(Screen.Library.route) {
                     val likedSongs by viewModel.likedSongs.collectAsState()
                     LibraryFromApiScreen(songs = likedSongs)
+                }
+                composable(Screen.NowPlaying.route) {
+                    val currentSong by viewModel.currentSong.collectAsState()
+                    val controller = mediaController
+                    if (currentSong != null && controller != null) {
+                        NowPlayingScreen(
+                            song = currentSong!!,
+                            player = controller,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }
