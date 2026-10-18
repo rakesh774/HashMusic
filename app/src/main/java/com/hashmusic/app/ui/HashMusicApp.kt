@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.session.MediaController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -37,7 +38,7 @@ sealed class Screen(val route: String, val title: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HashMusicApp() {
+fun HashMusicApp(mediaController: MediaController? = null) {
     val context = LocalContext.current
     val app = context.applicationContext as HashMusicApplication
     val viewModel: MainViewModel = viewModel(
