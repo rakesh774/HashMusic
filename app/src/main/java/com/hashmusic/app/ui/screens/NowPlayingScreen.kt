@@ -1,13 +1,8 @@
 package com.hashmusic.app.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,17 +10,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.compose.material3.buttons.PlayPauseButton
+import androidx.media3.ui.compose.material3.buttons.SeekBackButton
+import androidx.media3.ui.compose.material3.buttons.SeekForwardButton
+import androidx.media3.ui.compose.material3.indicator.ProgressSlider
 import coil.compose.AsyncImage
 import com.hashmusic.app.model.Song
 
+@UnstableApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NowPlayingScreen(
     song: Song,
-    isPlaying: Boolean,
-    onPlayPause: () -> Unit,
+    player: Player,
     onBack: () -> Unit
 ) {
+    var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    
+    LaunchedEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+        }
+        player.addListener(listener)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,9 +61,7 @@ fun NowPlayingScreen(
             AsyncImage(
                 model = song.albumArt,
                 contentDescription = "Album Art",
-                modifier = Modifier
-                    .size(300.dp)
-                    .padding(16.dp),
+                modifier = Modifier.size(300.dp),
                 contentScale = ContentScale.Crop
             )
             
@@ -70,31 +80,21 @@ fun NowPlayingScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ProgressSlider(player = player, modifier = Modifier.fillMaxWidth())
+            
+            Spacer(modifier = Modifier.height(16.dp))
             
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { }) {
-                    Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", modifier = Modifier.size(48.dp))
-                }
-                
-                Spacer(modifier = Modifier.width(32.dp))
-                
-                IconButton(onClick = onPlayPause) {
-                    Icon(
-                        if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play",
-                        modifier = Modifier.size(64.dp)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(32.dp))
-                
-                IconButton(onClick = { }) {
-                    Icon(Icons.Filled.SkipNext, contentDescription = "Next", modifier = Modifier.size(48.dp))
-                }
+                SeekBackButton(player = player)
+                Spacer(modifier = Modifier.width(16.dp))
+                PlayPauseButton(player = player)
+                Spacer(modifier = Modifier.width(16.dp))
+                SeekForwardButton(player = player)
             }
         }
     }
