@@ -16,13 +16,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.media3.session.MediaController
 import coil.compose.AsyncImage
 import com.hashmusic.app.model.Song
 import com.hashmusic.app.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: MainViewModel) {
+fun HomeScreen(
+    viewModel: MainViewModel,
+    mediaController: MediaController? = null
+) {
     val recommendedSongs by viewModel.recommendedSongs.collectAsState()
     val isLoading by viewModel.isLoadingRecommended.collectAsState()
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.session.MediaController
 import coil.compose.AsyncImage
 import com.hashmusic.app.HashMusicApplication
 import com.hashmusic.app.model.Song
@@ -25,7 +26,8 @@ import com.hashmusic.app.ui.viewmodel.MainViewModelFactory
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    mediaController: MediaController? = null
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadLikedSongsFromRemote()

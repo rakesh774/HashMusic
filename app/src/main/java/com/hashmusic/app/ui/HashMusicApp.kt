@@ -38,7 +38,7 @@ sealed class Screen(val route: String, val title: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HashMusicApp(mediaController: MediaController? = null) {
+fun HashMusicApp(mediaController: MediaController?) {
     val context = LocalContext.current
     val app = context.applicationContext as HashMusicApplication
     val viewModel: MainViewModel = viewModel(
@@ -103,8 +103,18 @@ fun HashMusicApp(mediaController: MediaController? = null) {
                 startDestination = Screen.Home.route,
                 modifier = Modifier.padding(paddingValues)
             ) {
-                composable(Screen.Home.route) { HomeScreen(viewModel = viewModel) }
-                composable(Screen.Search.route) { SearchScreen(viewModel = viewModel) }
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        viewModel = viewModel,
+                        mediaController = mediaController
+                    )
+                }
+                composable(Screen.Search.route) {
+                    SearchScreen(
+                        viewModel = viewModel,
+                        mediaController = mediaController
+                    )
+                }
                 composable(Screen.Library.route) {
                     val likedSongs by viewModel.likedSongs.collectAsState()
                     LibraryFromApiScreen(songs = likedSongs)
